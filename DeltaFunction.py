@@ -188,7 +188,11 @@ def learning_procedure(mc_batchsize, n_epochs, no_of_sites, activation_vector,
             
             print(np.sum(target_batch))
             print(epoch, "Train accuracy:", acc_train)
-                
+        print(np.c_[target_batch, layers_dnn[-1].eval(feed_dict={X: batch})])
+        if save:
+            save_path = saver.save(sess, "./delta/delta_func_bosons_np=" +
+                                str(no_of_particles) + "ns=" +
+                                str(no_of_sites) + ".ckpt")
 
 
 def main():
@@ -199,7 +203,7 @@ def main():
     activation_vector1 = [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu,
                           tf.math.exp]
     activation_vector2 = ['rel', 'rel', 'rel', 'rel', 'exp']
-    mc_batchsize = 500
+    mc_batchsize = 1000
     n_epochs = 32000
     no_of_sites = 5
     no_of_particles = 5
@@ -207,9 +211,10 @@ def main():
     
     start = time.time()
     graph_initialization(neuron_vector, activation_vector1,
-                         learning_rate = 0.001)
+                         learning_rate = 0.005)
     learning_procedure(mc_batchsize, n_epochs, no_of_sites,
-                       activation_vector2, no_of_particles)
+                       activation_vector2, no_of_particles,
+                       save = True)
     end = time.time()
     
     print(end-start)
