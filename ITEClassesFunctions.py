@@ -91,19 +91,19 @@ class NeuralNetworkGenerator:
         neigh_sites_2 = n_2 + self.jump_matrix
 
         result = (self.nn_out(n_input[np.newaxis]) - self.delta_beta *
-                    U / 4 * (self.nn_out(np.c_[n_1, n_1])
+                    self.U / 4 * (self.nn_out(np.c_[n_1, n_1])
                              * np.sum(n_1 *(n_1 - 1)) +
                             self.nn_out(np.c_[n_2, n_2])
                             * np.sum(n_2 *(n_2 - 1))) +                    
                   self.delta_beta / 2 * np.sum(self.nn_out(np.c_[np.repeat(
-                      n_1, 2*self.no_of_sites, axis=0), neigh_sites_1]) + 
-                      self.nn_out(np.c_[neigh_sites_2, np.repeat(
+                      n_1, 2*self.no_of_sites, axis=0), neigh_sites_2]) + 
+                      self.nn_out(np.c_[neigh_sites_1, np.repeat(
                       n_2, 2*self.no_of_sites, axis=0)]), axis=0))
 
         return result
         
     # Monte Carlo Evolution
-    def mc_step(self, n_input):
+    def mc_step(self, n_input, neuralNGenerator):
         r1 = np.random.randint(2 * self.no_of_sites)
         r2 = np.random.randint(self.no_of_sites) + self.no_of_sites * (
                r1 // self.no_of_sites)
@@ -113,11 +113,11 @@ class NeuralNetworkGenerator:
             n_output[r2] += 1
         
         if self.evolution:
-            target_output1 = self.target_outputHM(n_input)
-            target_output2 = self.target_outputHM(n_output)
+            target_output1 = neuralNGenerator.target_outputHM(n_input)
+            target_output2 = neuralNGenerator.target_outputHM(n_output)
         else:
-            target_output1 = self.target_output(n_input)
-            target_output2 = self.target_output(n_output)
+            target_output1 = neuralNGenerator.target_output(n_input)
+            target_output2 = neuralNGenerator.target_output(n_output)
         prob1 = (target_output1 - self.nn_out(n_input[np.newaxis]))**2
         prob2 = (target_output2 - self.nn_out(n_output[np.newaxis]))**2
         if np.random.rand() < (prob2 / prob1):
@@ -191,14 +191,9 @@ def tensor_eval(tensor):
 
     
 def learning_procedure(mc_batchsize, n_epochs, no_of_sites, activation_vector,
-                       no_of_particles, save = False, evolution=False):
+                       no_of_particles, save = False):
     with tf.Session() as sess:
-        if evolution:
-            saver.restore(sess, "./delta/delta_func_bosons_np=" +
-                           str(no_of_particles) + "ns=" +
-                           str(no_of_sites) + ".ckpt")
-        else:
-            init.run()
+        init.run()
         for epoch in range(n_epochs):
             batch = np.zeros((mc_batchsize, 2*no_of_sites))
             target_batch = np.zeros(mc_batchsize)
@@ -218,7 +213,7 @@ def learning_procedure(mc_batchsize, n_epochs, no_of_sites, activation_vector,
             for instance in range(mc_batchsize-1):
                 (batch[instance+1,:],
                 target_batch[instance+1]) = nn_instance.mc_step(
-                    batch[instance,:])
+                    batch[instance,:], nn_instance)
             
             sess.run(training_op, feed_dict={X: batch, y: target_batch})
             acc_train = loss.eval(feed_dict={X: batch, y: target_batch})
@@ -231,5 +226,64 @@ def learning_procedure(mc_batchsize, n_epochs, no_of_sites, activation_vector,
             save_path = saver.save(sess, "./delta/delta_func_bosons_np=" +
                                 str(no_of_particles) + "ns=" +
                                 str(no_of_sites) + ".ckpt")
+            
+def learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites, 
+                            activation_vector, no_of_particles, U,
+                            delta_beta, save=False,
+                            is_first=False):
+    with tf.Session() as sess:
+        if is_first:
+            saver.restore(sess, "./delta/delta_func_bosons_np=" +
+                           str(no_of_particles) + "ns=" +
+                           str(no_of_sites) + ".ckpt")
+        
+        old_nn = NeuralNetworkGenerator(list(map(tensor_eval, 
+                                                weights_dnn)),
+                                                 list(map(tensor_eval,
+                                                 bias_dnn)),
+                                                 activation_vector, 
+                                                 no_of_sites,
+                                                 delta_beta=delta_beta,
+                                                 U=U, evolution=True)
+        for epoch in range(n_epochs):
+            batch = np.zeros((mc_batchsize, 2*no_of_sites))
+            target_batch = np.zeros(mc_batchsize)
+            n_start1 = np.random.randint(no_of_sites, size=(no_of_particles))
+            n_start2 = np.random.randint(no_of_sites, size=(no_of_particles))
+            nn_instance = NeuralNetworkGenerator(list(map(tensor_eval, 
+                                                          weights_dnn)),
+                                                 list(map(tensor_eval,
+                                                          bias_dnn)),
+                                                 activation_vector, 
+                                                 no_of_sites,
+                                                 evolution=True)
+            for site in range(no_of_sites):
+                batch[0,site] = np.sum(n_start1 == site)
+                batch[0,site + no_of_sites] = np.sum(n_start2 == site)
+            target_batch[0] = old_nn.target_output(batch[0,:])
+            
+            for instance in range(mc_batchsize-1):
+                (batch[instance+1,:],
+                target_batch[instance+1]) = nn_instance.mc_step(
+                    batch[instance,:], old_nn)
+                
+            sess.run(training_op, feed_dict={X: batch, y: target_batch})
+            acc_train = loss.eval(feed_dict={X: batch, y: target_batch})
+            
+            print(np.sum(target_batch))
+            print(epoch, "Train accuracy:", acc_train)
+            
+        print(np.c_[target_batch, layers_dnn[-1].eval(feed_dict={X: batch})])
+                                                 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
             
             
