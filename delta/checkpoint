@@ -1,0 +1,2 @@
+model_checkpoint_path: "delta_func_bosons_np=5ns=5.ckpt"
+all_model_checkpoint_paths: "delta_func_bosons_np=5ns=5.ckpt"
