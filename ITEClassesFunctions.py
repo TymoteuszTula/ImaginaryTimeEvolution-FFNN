@@ -83,6 +83,10 @@ class NeuralNetworkGenerator:
         else:
             return 0
         
+    def target_output2(self, n_input):
+        return np.prod(np.equal(n_input[:,:self.no_of_sites],
+                                n_input[:,self.no_of_sites:]), axis=1)
+        
     # Calculating target output - Hubbard model
     def target_outputHM(self, n_input):
         n_1 = n_input[:self.no_of_sites][np.newaxis]
@@ -91,15 +95,25 @@ class NeuralNetworkGenerator:
         neigh_sites_2 = n_2 + self.jump_matrix
 
         result = (self.nn_out(n_input[np.newaxis]) - self.delta_beta *
-                    self.U / 4 * (self.nn_out(np.c_[n_1, n_1])
-                             * np.sum(n_1 *(n_1 - 1)) +
-                            self.nn_out(np.c_[n_2, n_2])
-                            * np.sum(n_2 *(n_2 - 1))) +                    
-                  self.delta_beta / 2 * np.sum(self.nn_out(np.c_[np.repeat(
-                      n_1, 2*self.no_of_sites, axis=0), neigh_sites_2]) + 
-                      self.nn_out(np.c_[neigh_sites_1, np.repeat(
-                      n_2, 2*self.no_of_sites, axis=0)]), axis=0))
-
+                   self.U / 4 * (self.nn_out(np.c_[n_1, n_2])
+                            * np.sum(n_1 *(n_1 - 1)) +
+                           self.nn_out(np.c_[n_1, n_2])
+                           * np.sum(n_2 *(n_2 - 1))) +                    
+                 self.delta_beta / 2 * np.sum(self.nn_out(np.c_[np.repeat(
+                     n_1, 2*self.no_of_sites, axis=0), neigh_sites_2]) + 
+                     self.nn_out(np.c_[neigh_sites_1, np.repeat(
+                     n_2, 2*self.no_of_sites, axis=0)]), axis=0))
+        
+        #result = (self.target_output2(n_input[np.newaxis]) - self.delta_beta *
+                    #self.U / 4 * (self.target_output2(np.c_[n_1, n_2])
+                             #* np.sum(n_1 *(n_1 - 1)) +
+                            #self.target_output2(np.c_[n_1, n_2])
+                            #* np.sum(n_2 *(n_2 - 1))) +                    
+                  #self.delta_beta / 2 * np.sum(self.target_output2(np.c_[np.repeat(
+                      #n_1, 2*self.no_of_sites, axis=0), neigh_sites_2]) + 
+                      #self.target_output2(np.c_[neigh_sites_1, np.repeat(
+                      #n_2, 2*self.no_of_sites, axis=0)]), axis=0))
+                      
         return result
         
     # Monte Carlo Evolution
@@ -270,7 +284,7 @@ def learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites,
             sess.run(training_op, feed_dict={X: batch, y: target_batch})
             acc_train = loss.eval(feed_dict={X: batch, y: target_batch})
             
-            print(np.sum(target_batch))
+            print(np.sum((target_batch > 0) * (target_batch < 0.5) ))
             print(epoch, "Train accuracy:", acc_train)
             
         print(np.c_[target_batch, layers_dnn[-1].eval(feed_dict={X: batch})])

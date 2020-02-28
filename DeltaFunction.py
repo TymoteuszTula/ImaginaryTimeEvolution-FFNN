@@ -19,8 +19,8 @@ def main():
     activation_vector1 = [tf.nn.relu, tf.nn.relu, tf.nn.relu, tf.nn.relu,
                           tf.math.exp]
     activation_vector2 = ['rel', 'rel', 'rel', 'rel', 'exp']
-    mc_batchsize = 1000
-    n_epochs = 2000
+    mc_batchsize = 2000
+    n_epochs = 32000
     no_of_sites = 5
     no_of_particles = 5
     
