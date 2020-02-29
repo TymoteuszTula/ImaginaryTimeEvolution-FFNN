@@ -27,7 +27,7 @@ def main():
     
     start = time.time()
     ITEC.graph_initialization(neuron_vector, activation_vector1,
-                         learning_rate = 0.002)
+                         learning_rate = 0.001)
     ITEC.learning_procedure(mc_batchsize, n_epochs, no_of_sites,
                        activation_vector2, no_of_particles,
                        save = True)

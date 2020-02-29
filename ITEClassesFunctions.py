@@ -243,7 +243,7 @@ def learning_procedure(mc_batchsize, n_epochs, no_of_sites, activation_vector,
             
 def learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites, 
                             activation_vector, no_of_particles, U,
-                            delta_beta, save=False,
+                            delta_beta, save=False, save_name='0',
                             is_first=False):
     with tf.Session() as sess:
         if is_first:
@@ -288,7 +288,11 @@ def learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites,
             print(epoch, "Train accuracy:", acc_train)
             
         print(np.c_[target_batch, layers_dnn[-1].eval(feed_dict={X: batch})])
-                                                 
+        if save:
+            save_path = saver.save(sess, "./evolutionNN/evolution_bosons_np=" +
+                                str(no_of_particles) + "ns=" +
+                                str(no_of_sites) + "beta=" + 
+                                save_name + ".ckpt")                                         
     
     
     
