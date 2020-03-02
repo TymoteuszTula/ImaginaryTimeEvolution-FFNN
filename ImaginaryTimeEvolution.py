@@ -30,17 +30,17 @@ def main():
                          learning_rate = 0.001)
     ITEC.learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites,
                        activation_vector2, no_of_particles,
-                       save = True, save_name=str(delta_beta),
+                       save = True, save_name=f"{delta_beta:.3f}",
                        is_first=True, U=U, 
                        delta_beta=delta_beta)
     
     for iterations in range(beta_it):
         ITEC.learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites,
                        activation_vector2, no_of_particles,
-                       save = True, save_name=str((beta_it + 2) * delta_beta),
+                       save = True, save_name=f"{((iterations + 2) * delta_beta):.3f}",
                        is_first=False, U=U, 
                        delta_beta=delta_beta,
-                       previous_point = str((beta_it + 1) * delta_beta))
+                       previous_point = f"{((iterations + 1) * delta_beta):.3f}")
     
     end = time.time()
     
