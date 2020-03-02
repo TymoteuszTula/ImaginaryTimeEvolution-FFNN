@@ -1,0 +1,2 @@
+model_checkpoint_path: "evolution_bosons_np=5ns=5beta=0.001.ckpt"
+all_model_checkpoint_paths: "evolution_bosons_np=5ns=5beta=0.001.ckpt"

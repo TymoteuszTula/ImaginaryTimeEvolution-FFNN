@@ -39,7 +39,8 @@ def main():
                        activation_vector2, no_of_particles,
                        save = True, save_name=str((beta_it + 2) * delta_beta),
                        is_first=False, U=U, 
-                       delta_beta=delta_beta)
+                       delta_beta=delta_beta,
+                       previous_point = str((beta_it + 1) * delta_beta))
     
     end = time.time()
     

@@ -244,12 +244,17 @@ def learning_procedure(mc_batchsize, n_epochs, no_of_sites, activation_vector,
 def learning_procedure_evol(mc_batchsize, n_epochs, no_of_sites, 
                             activation_vector, no_of_particles, U,
                             delta_beta, save=False, save_name='0',
-                            is_first=False):
+                            is_first=False, previous_point='0'):
     with tf.Session() as sess:
         if is_first:
             saver.restore(sess, "./delta/delta_func_bosons_np=" +
                            str(no_of_particles) + "ns=" +
                            str(no_of_sites) + ".ckpt")
+        else:
+            saver.restore(sess, "./evolutionNN/evolution_bosons_np=" +
+                                str(no_of_particles) + "ns=" +
+                                str(no_of_sites) + "beta=" + 
+                                previous_point + ".ckpt")
         
         old_nn = NeuralNetworkGenerator(list(map(tensor_eval, 
                                                 weights_dnn)),
