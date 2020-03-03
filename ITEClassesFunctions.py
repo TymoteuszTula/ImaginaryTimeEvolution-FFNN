@@ -198,7 +198,7 @@ def graph_initialization(neuron_vector, activation_vector,
 
 
     init = tf.global_variables_initializer()
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=0)
 
 def tensor_eval(tensor):
     return tensor.eval()
